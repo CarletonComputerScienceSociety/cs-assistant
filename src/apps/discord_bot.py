@@ -33,6 +33,9 @@ async def askCommand(interaction: discord.Interaction, question: str) -> None:
     try:
         answer = await ask(question=question)
     except Exception as e:
+        await interaction.followup.send(
+            "❌ I couldn't process this request, " "please try again later."
+        )
         log.error("discord_ask_failed", interaction_id=interaction.id, error=str(e))
         return
 
