@@ -1,3 +1,5 @@
+import sys
+
 import discord
 from discord import app_commands
 
@@ -26,7 +28,7 @@ client = CsAssistantBot()
 
 @client.tree.command(name="ask", description="Receive advice for Carleton CS")
 @app_commands.describe(question="Your question")
-async def askCommand(interaction: discord.Interaction, question: str) -> None:
+async def ask_command(interaction: discord.Interaction, question: str) -> None:
     await interaction.response.defer()
     log.info("discord_ask_received", interaction_id=interaction.id, question=question)
 
@@ -34,7 +36,7 @@ async def askCommand(interaction: discord.Interaction, question: str) -> None:
         answer = await ask(question=question)
     except Exception as e:
         await interaction.followup.send(
-            "❌ I couldn't process this request, " "please try again later."
+            "❌ I couldn't process this request, please try again later."
         )
         log.error("discord_ask_failed", interaction_id=interaction.id, error=str(e))
         return
@@ -49,7 +51,7 @@ async def askCommand(interaction: discord.Interaction, question: str) -> None:
 
 if __name__ == "__main__":
     if settings.discord_bot_token is None or settings.discord_guild_id is None:
-        print("Discord config is incomplete or nonexistant")
-        exit()
+        print("Discord config is incomplete or nonexistent", file=sys.stderr)
+        sys.exit(1)
 
     client.run(settings.discord_bot_token)
