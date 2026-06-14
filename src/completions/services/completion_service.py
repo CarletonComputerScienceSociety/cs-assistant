@@ -1,3 +1,5 @@
+import re
+
 from src.completions.prompts import build_messages
 from src.config.logger import get_logger
 from src.domain.types import Answer, RetrievedChunk, Source
@@ -23,6 +25,16 @@ def _extract_sources(chunks: list[RetrievedChunk]) -> list[Source]:
     return list(seen.values())
 
 
+def strip_trailing_sources_block(text: str) -> str:
+    matches = list(re.finditer(r"(?m)^Sources:\s*$", text))
+
+    if not matches:
+        return text
+
+    last_match = matches[-1]
+    return text[: last_match.start()].rstrip()
+
+
 async def ask(question: str) -> Answer:
     """Answer a question using retrieved chunks. Returns abstain Answer if nothing matched."""
     log.info("ask_started", question_len=len(question))
@@ -42,6 +54,7 @@ async def ask(question: str) -> Answer:
 
     try:
         response_text = await llm.chat(messages)
+        response_text = strip_trailing_sources_block(response_text)
     except Exception as e:
         log.error("llm_call_failed", error=str(e))
         raise
