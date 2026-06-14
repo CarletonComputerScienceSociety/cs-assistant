@@ -5,7 +5,6 @@ from src.retrieval.services.retrieval_service import (
     settings,
 )
 
-
 @patch("src.retrieval.services.retrieval_service.async_session_factory")
 @patch.object(Repository, "top_k_chunks", new_callable=AsyncMock)
 @patch("src.retrieval.services.embedding_service.embed_query", new_callable=AsyncMock)
