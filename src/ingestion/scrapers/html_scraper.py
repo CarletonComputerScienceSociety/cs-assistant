@@ -21,7 +21,7 @@ def scrape(url: str) -> tuple[str, str | None]:
     for el in html.select(".footer, .global-nav, .navigation, .topbar, .content__meta"): # removing elements by class
         el.decompose()
 
-    for tag in html(["header","footer"]): # removing elements by tag
+    for tag in html(["header","footer","nav"]): # removing elements by tag
         tag.decompose()
 
     # formatting links after clearing having cleared clutter
