@@ -26,12 +26,12 @@
     - "https://carleton.ca/registration/academic-dates/"
     - "https://carleton.ca/registration/waitlisting/"
 
-- question: "How many courses should I taken in a semester?"
+- question: "How many courses should I take in a semester?"
   expected_answer: "Full-time students generally take 2.5 credits per term (usually 5 courses), but it's fairly common to take 2.0 credits (4 courses) for a lighter workload. Before deciding, consult an academic advisor to discuss your specific situation, as a reduced course load could impact your full-time status, tuition costs, residence/scholarship eligibility, government funding (like OSAP), co-op eligibility, and visas for international students."
   expected_sources:
     - "https://ccss.carleton.ca/resources/faqs/how-many-courses-in-a-semester/"
     - "https://carleton.ca/academicadvising/"
-    - "https://carleton.ca/academicadvising/reduced-course-load-2/"
+    - "https://carleton.ca/academicadvising/reduced-course-load/"
 
 - question: "What is the difference between a lecture and tutorial?"
   expected_answer: "Lectures are the main part of a course where instructors cover course material, and midterms often take place during lecture time slots. Tutorials are additional sessions led by teaching assistants that supplement learning with practical exercises or short quizzes, with formats varying by course and explained in the course outline. If a course has a tutorial, you must register for both a lecture section and an associated tutorial section."
@@ -44,7 +44,7 @@
     - "https://ccss.carleton.ca/resources/faqs/comp-1005-1006-vs-1405-1406/"
 
 - question: "When can I register for courses?"
-  expected_answer: "You can register for courses based on your time ticket, which you can find in the 'getting started' section of the registration menu in Carleton Central. Incoming first-year students can register between July 2nd and July 4th, 2025, while returning upper-year students can register between July 8th and July 11th, 2025. It's strongly recommended to register as soon as your time ticket opens, but you can make changes until a few weeks into the semester, and check the academic calendar for specific adding/dropping deadlines."
+  expected_answer: "You can register for courses based on your time ticket, which you can find in the 'getting started' section of the registration menu in Carleton Central. It's strongly recommended to register as soon as your time ticket opens, but you can make changes until a few weeks into the semester, and check the academic calendar for specific adding/dropping deadlines."
   expected_sources:
     - "https://ccss.carleton.ca/resources/faqs/what-are-time-tickets/"
     - "https://carleton.ca/registration/dates/timetickets/"
@@ -54,7 +54,7 @@
   expected_answer: "Yes, you may be able to take some 2000-level or higher courses if you meet the prerequisite requirements. Prerequisites include having passing grades in certain courses or meeting specific year standing, and you can find these requirements in the course description in the undergraduate calendar. You may submit a registration override request to register without meeting prerequisites, but these are reviewed case-by-case and not guaranteed to be approved."
   expected_sources:
     - "https://ccss.carleton.ca/resources/faqs/can-i-take-2000-level-courses-in-first-year/"
-    - "https://carleton.ca/academicadvising/year-standing/"
+    - "https://carleton.ca/academicadvising/degree-requirements/"
     - "https://calendar.carleton.ca/undergrad/courses/"
     - "https://carleton.ca/registration/override-requests/"
 
