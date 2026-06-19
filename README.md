@@ -157,8 +157,8 @@ You should see an answer followed by a `Sources:` block listing the URLs used.
 While inside the interactive CLI (`ask>`), you can use the following commands to control the session and view metadata:
 | Command | Description |
 | :--- | :--- |
-| `:stats` | Toggles the display of performance metrics (e.g., token count, response time) for subsequent prompts. |
-| `:verbose` | Toggles verbose mode, displaying detailed internal logs, thought processes, or API interactions. |
+| `:stats` | Quick check on how many sources and chunks are loaded in the DB. |
+| `:verbose` | Toggles verbose mode. On every query, it'll dump the retrieved chunks (URLs, match scores, and snippets) right before the response. |
 | `exit` or `quit` | Safely terminates the interactive session and returns to your terminal shell. (You can also use `Ctrl-D`). |
 
 A grounded answer looks like this:

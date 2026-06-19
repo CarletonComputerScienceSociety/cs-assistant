@@ -18,8 +18,19 @@ async def _check_db() -> None:
             )
 
 
+async def _print_db_status():
+    async with async_session_factory() as session:
+        count_sources, count_chunks = await Repository.get_source_and_chunk_counts(session)
+    if count_chunks == 0:
+        print(
+            "WARNING: The database has no chunks. Run `make ingest` first, "
+            "or your questions will all be answered with 'I don't know'.\n"
+        )
+    print(f"{count_sources} sources, {count_chunks} chunks loaded")
+
+
 async def _repl() -> None:
-    await _check_db()
+    await _print_db_status()
     verbose = False  # flag for :verbose
 
     print("cs-assistant dev CLI. Type 'exit' or Ctrl-D to quit.\n")
@@ -32,12 +43,9 @@ async def _repl() -> None:
             print("\nbye")
             return
 
-        # :stats cmd
+        # :stats cmd [THIS NEEDS FIXING/REFACTORING]
         if question.lower() in {":stats"}:
-            async with async_session_factory() as session:
-                count_sources, count_chunks = await Repository.get_source_and_chunk_counts(session)
-            print(f"{count_sources} sources, {count_chunks} chunks loaded")
-            await _check_db()
+            await _print_db_status()
             continue
 
         # :verbose cmd
@@ -64,9 +72,7 @@ async def _repl() -> None:
             for chunk_item in retrieved_chunks:
                 source_url = chunk_item.chunk.source_url
                 similarity_score = chunk_item.score
-                snippet = " ".join(
-                    (chunk_item.chunk.content.split())[:250]
-                )  # snippet ~250 words (maybe chars instead?)
+                snippet = chunk_item.chunk.content[:250] + "[...]"
                 print(f"URL: {source_url}")
                 print(f"Similarity score: {similarity_score}")
                 print(f"Content snippet: {snippet}")
@@ -76,7 +82,7 @@ async def _repl() -> None:
         if answer.sources:
             print("Sources:")
             for source in answer.sources:
-                print(f"  - {source.url}")
+                print(f"{source.url}")
         print()
 
 
