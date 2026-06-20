@@ -7,11 +7,12 @@ def _extract_from_html(html: str) -> tuple[str, str | None]:
         html = html.split(cut_marker)[0]
 
     html = BeautifulSoup(html, "html.parser")
-
-    for el in html.select(".footer, .global-nav, .navigation, .topbar, .content__meta, .visuallyhidden"): # removing elements by class
+    # removing elements by class
+    for el in html.select(".footer, .global-nav, .navigation, .topbar, .content__meta, .visuallyhidden"):
         el.decompose()
 
-    for tag in html(["header","footer","nav"]): # removing elements by tag
+    # removing elements by tag
+    for tag in html(["header","footer","nav"]):
         tag.decompose()
 
     # formatting links after clearing having cleared clutter
