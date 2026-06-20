@@ -6,8 +6,10 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 # run with python -m tests.ingestion.scraper_offline
 
+
 def load_fixture(name: str) -> str:
     return (FIXTURES / name).read_text(encoding="utf-8")
+
 
 def test_bcyber_page():
     html = load_fixture("courseTest.html")
@@ -24,8 +26,7 @@ def test_bcyber_page():
     assert "[PDF:" in text
 
     assert (
-        "[PDF: https://carleton.ca/scs/wp-content/uploads/BCyber-Course-Map-202630-3.pdf]"
-        in text
+        "[PDF: https://carleton.ca/scs/wp-content/uploads/BCyber-Course-Map-202630-3.pdf]" in text
     )
 
     assert (
@@ -33,9 +34,10 @@ def test_bcyber_page():
         in text
     )
 
+
 def test_new_student_faq():
     html = load_fixture("faqTest.html")
-    
+
     text, title = _extract_from_html(html)
 
     question = "How do I build a timetable?"
@@ -52,6 +54,7 @@ def test_new_student_faq():
     # Use a phrase that appears in that answer block
     assert "Information about how to view your grades or exam schedule" in text
     assert "Skip to Main Content" not in text
+
 
 test_new_student_faq()
 test_bcyber_page()
