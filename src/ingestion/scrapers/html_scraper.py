@@ -8,7 +8,10 @@ def _extract_from_html(html: str) -> tuple[str, str | None]:
 
     html = BeautifulSoup(html, "html.parser")
     # removing elements by class
-    for el in html.select(".footer, .global-nav, .navigation, .topbar, .content__meta, .visuallyhidden"):
+    for el in html.select(
+        ".footer, .global-nav, .navigation, "
+        ".topbar, .content__meta, .visuallyhidden"
+        ):
         el.decompose()
 
     # removing elements by tag
