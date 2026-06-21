@@ -43,7 +43,7 @@ async def _repl() -> None:
             print("\nbye")
             return
 
-        # :stats cmd [THIS NEEDS FIXING/REFACTORING]
+        # :stats cmd
         if question.lower() in {":stats"}:
             await _print_db_status()
             continue
