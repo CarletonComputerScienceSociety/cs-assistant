@@ -23,8 +23,6 @@ class Repository:
     @staticmethod
     async def count_chunks(session: AsyncSession) -> int:
         result = await session.execute(select(func.count(ChunkRow.id)))
-        # if above doesn't work properly
-        # result = await session.execute(select(func.count().select_from(ChunkRow)))
         return result.scalar_one()
 
     @staticmethod
