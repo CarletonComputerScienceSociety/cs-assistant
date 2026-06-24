@@ -332,6 +332,54 @@ machine.
 
 ---
 
+## Bot Deployment
+
+This section covers running the Discord bot in a container. The bot service lives behind a Docker Compose profile so a plain `docker compose up` (used by contributors who only need Postgres and Redis for tests) is unaffected.
+
+### Prerequisites
+
+1. **Run migrations and ingestion from the host first.** The bot container only reads data; it does not migrate or ingest.
+
+```bash
+ make migrate
+ make ingest
+```
+
+2. **Ollama must be running on the host** with both the chat model and the embedding model pulled. Ollama is intentionally not containerized — it holds the models and will use a GPU host in production.
+
+3. **`.env` must be populated** with at least `DISCORD_BOT_TOKEN` and `DISCORD_GUILD_ID`. The bot exits at startup without them. The token is supplied at runtime via `env_file` and is never baked into the image.
+
+### Build and run
+
+```bash
+# Build the image and start the bot (plus Postgres):
+docker compose --profile bot up --build
+
+# Run in the background:
+docker compose --profile bot up -d --build
+
+# Or use the Makefile shortcut:
+make discord-docker
+```
+
+A plain `docker compose up -d` starts only `postgres` and `redis` — the `bot` service is excluded automatically.
+
+### Networking
+
+A container does not share the host's `localhost`, so two values from `.env` are overridden in the `bot` service inside `docker-compose.yml`:
+
+| Setting | Host (`.env`) | Container override |
+|---|---|---|
+| `DATABASE_URL` | `…@localhost:5445/…` | `…@postgres:5432/cs_assistant` |
+| `OLLAMA_URL` | `http://localhost:11434` | `http://host.docker.internal:11434` |
+
+Everything else (`DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`, `OLLAMA_CHAT_MODEL`, `EMBEDDING_DIM`, `TOP_K`, etc.) passes through unchanged from `.env`.
+
+**Linux note:** `host.docker.internal` does not resolve automatically on Linux. The `bot` service includes `extra_hosts: ["host.docker.internal:host-gateway"]` to handle this. This is harmless on macOS/Windows and is included unconditionally.
+
+
+
+
 ## Notes for contributors
 
 A few things worth keeping in mind:
