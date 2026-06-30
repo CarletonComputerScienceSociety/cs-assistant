@@ -45,17 +45,14 @@ class CsAssistantBot(discord.Client):
             async with message.channel.typing():
                 answer = await ask(question=question)
 
+            content = await render_answer_content(answer)
+
             try:
-                await message.reply(answer)
+                await message.reply(content)
             except Exception as e:
                 await message.reply("❌ I couldn't process this request, please try again later.")
                 log.error("discord_ask_failed", error=str(e))
                 return
-
-            content = render_answer_content(answer)
-            await message.reply(content)
-
-        await self.process_commands(message)
 
 
 client = CsAssistantBot()
@@ -76,18 +73,12 @@ async def ask_command(interaction: discord.Interaction, question: str) -> None:
         log.error("discord_ask_failed", interaction_id=interaction.id, error=str(e))
         return
 
-    # content = answer.text
-    # if answer.sources:
-    #    content += "\n\n**Sources:**\n" + "\n".join(f"• {source.url}" for source in answer.sources)
     content = await render_answer_content(answer)
     await interaction.followup.send(content)
     log.info("discord_ask_completed", interaction_id=interaction.id)
 
 
 async def question_assembler(message) -> str:
-    # stripping bot mention
-    # mention_text = await strip_bot_mention(message)
-
     # if message is reply to a question
     referenced_text = ""
     if message.reference and message.reference.message_id:
