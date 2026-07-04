@@ -3,9 +3,9 @@ import httpx
 from bs4 import BeautifulSoup
 import re
 
-# from src.config.logger import get_logger
+from src.config.logger import get_logger
 
-# log = get_logger(__name__)
+log = get_logger(__name__)
 
 _BOILERPLATE_TAGS = ["header", "footer", "nav", "script", "style", "noscript"]
 _BOILERPLATE_SELECTORS = (
@@ -17,7 +17,7 @@ _BLOCK_TAGS = ["p", "div", "li", "h1", "h2", "h3", "h4", "h5", "h6",
                "tr", "section", "article", "ul", "ol", "table", "br", "blockquote"]
 
 def _extract_from_html(html: str) -> tuple[str, str | None]:
-    # log.info("html_extract_start", html_len=len(html))
+    log.info("html_extract_start", html_len=len(html))
 
     cut_marker = "<!-- close main-wrapper"
     if cut_marker in html:
@@ -35,7 +35,7 @@ def _extract_from_html(html: str) -> tuple[str, str | None]:
     for el in soup.select(_BOILERPLATE_SELECTORS):
         el.decompose()
     
-    # log.info("boilerplate_removed")
+    log.info("boilerplate_removed")
 
     # formatting links after clearing having cleared clutter
     for link in root.find_all("a"):
@@ -46,7 +46,7 @@ def _extract_from_html(html: str) -> tuple[str, str | None]:
             marker = "PDF" if is_pdf else "Link"
             link.replace_with(f"{text} [{marker}: {href}] ")
 
-    # log.info("links_parsed")
+    log.info("links_parsed")
 
     for tag in root.find_all(_BLOCK_TAGS):
         tag.append("\n")
@@ -59,7 +59,7 @@ def _extract_from_html(html: str) -> tuple[str, str | None]:
 
     title = soup.title.get_text(strip=True) if soup.title else None
 
-    # log.info("html_extract_complete", text_len=len(text), has_title=title is not None)
+    log.info("html_extract_complete", text_len=len(text), has_title=title is not None)
     return text, title
 
 
@@ -68,26 +68,21 @@ def scrape(url: str) -> tuple[str, str | None]:
 
     Returns (text, title). Title may be None if not found.
     """
-    # log.info("scrape_called", url=url)
+    log.info("scrape_called", url=url)
 
-    # log.info("http_request_start", url=url)
+    log.info("http_request_start", url=url)
     with httpx.Client(timeout=30, follow_redirects=True) as client:
         response = client.get(url)
         response.raise_for_status()
 
-    # log.info(
-    #     "http_request_success",
-    #     url=url,
-    #     status_code=response.status_code,
-    #     bytes=len(response.text),
-    # )
+    log.info(
+        "http_request_success",
+        url=url,
+        status_code=response.status_code,
+        bytes=len(response.text),
+    )
 
-    # log.info("html_parsing_start", url=url)
+    log.info("html_parsing_start", url=url)
     text, title = _extract_from_html(response.text)
-    # log.info("scrape_complete", url=url, chars=len(text), title=title)
+    log.info("scrape_complete", url=url, chars=len(text), title=title)
     return text, title
-
-text,title = scrape("https://carleton.ca/scs/current-students/bachelor-of-cybersecurity-deprecated/bcyber-courses-and-registration/")
-with open("output.txt", "w", encoding="utf-8") as file:
-    file.write(text)
-    file.write(title)
