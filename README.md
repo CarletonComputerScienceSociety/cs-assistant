@@ -162,7 +162,7 @@ You'll need your own throwaway Discord server and bot to develop against:
 1. In the [Discord Developer Portal](https://discord.com/developers/applications),
    create an application, then under **Bot** click **Reset Token** and copy the
    token. No privileged intents are required — `/ask` uses default intents.
-2. ADD HERE (rough for now) Scroll down and check the permissions the bot needs: **Send Messages**,
+2. Scroll down and check the permissions the bot needs: **Send Messages**,
    **View Channel** and **Read Message History**.
 3. Under **OAuth2 → URL Generator**, select the `bot` and `applications.commands`
    scopes, open the generated URL, and invite the bot to a server you own.
