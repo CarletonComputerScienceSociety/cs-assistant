@@ -1,7 +1,8 @@
+import re
 from urllib.parse import urlsplit
+
 import httpx
 from bs4 import BeautifulSoup
-import re
 
 from src.config.logger import get_logger
 
@@ -13,15 +14,29 @@ _BOILERPLATE_SELECTORS = (
     ".navigation, .topbar, .content__meta, .visuallyhidden, "
     ".resource__contributors-list, #on-this-page, .resource__sources__heading"
 )
-_BLOCK_TAGS = ["p", "div", "li", "h1", "h2", "h3", "h4", "h5", "h6",
-               "tr", "section", "article", "ul", "ol", "table", "br", "blockquote"]
+_BLOCK_TAGS = [
+    "p",
+    "div",
+    "li",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "tr",
+    "section",
+    "article",
+    "ul",
+    "ol",
+    "table",
+    "br",
+    "blockquote",
+]
+
 
 def _extract_from_html(html: str) -> tuple[str, str | None]:
     log.info("html_extract_start", html_len=len(html))
-
-    cut_marker = "<!-- close main-wrapper"
-    if cut_marker in html:
-        html = html.split(cut_marker)[0]
 
     soup = BeautifulSoup(html, "html.parser")
 
@@ -29,15 +44,15 @@ def _extract_from_html(html: str) -> tuple[str, str | None]:
     if root is None:  # CCSS-style pages have no <main>
         root = soup.body or soup
 
-    # still might need to clean some things up
-    for t in soup(_BOILERPLATE_TAGS):
+    # strip boilerplate from within the extracted region
+    for t in root(_BOILERPLATE_TAGS):
         t.decompose()
-    for el in soup.select(_BOILERPLATE_SELECTORS):
+    for el in root.select(_BOILERPLATE_SELECTORS):
         el.decompose()
-    
+
     log.info("boilerplate_removed")
 
-    # formatting links after clearing having cleared clutter
+    # format links after removing boilerplate
     for link in root.find_all("a"):
         href = (link.get("href") or "").strip()
         if href and not href.startswith("#"):
