@@ -1,4 +1,7 @@
-import os, json, urllib.request, urllib.error
+import json
+import os
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 

@@ -30,4 +30,3 @@ jobs:
           USER_ID: ${{ secrets.USER_ID }}
         run: |
           python -u scripts/link_checker.py
-
