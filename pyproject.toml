@@ -11,11 +11,11 @@ dependencies = [
     "pgvector",
     "alembic",
     "httpx",
-    "trafilatura",
     "langchain-text-splitters",
     "celery",
     "redis",
     "discord-py>=2.7.1",
+    "beautifulsoup4>=4.15.0",
 ]
 
 [dependency-groups]
