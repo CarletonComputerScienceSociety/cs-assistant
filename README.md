@@ -78,19 +78,21 @@ this reason — leave it there.
 make setup
 ```
 
-This runs `uv sync`, which installs all runtime and dev dependencies into a
-local virtual environment. You do not need to activate it; all `make` commands
-prefix their commands with `uv run`.
+This runs `uv sync` (installs all runtime and dev dependencies into a local
+virtual environment) and `pre-commit install` (sets up the git hook). You do
+not need to activate the venv; all `make` commands prefix their commands with
+`uv run`.
 
-### 5. Enable git pre-commit hooks
+### 5. Git pre-commit hooks
+
+`make setup` already installed the git pre-commit hook, so ruff, black, and the
+file-hygiene checks run automatically on every `git commit`. The hook
+configuration is committed (`.pre-commit-config.yaml`); the git hook itself is
+local per clone. To re-install it manually if needed:
 
 ```bash
 uv run pre-commit install
 ```
-
-This is a one-time step per clone. The hook configuration is committed
-(`.pre-commit-config.yaml`), but the actual git hook is local. After this,
-ruff and black run automatically on every `git commit`.
 
 If a hook auto-fixes files, the commit is aborted and the fixes are left
 unstaged. Just `git add` the changed files and commit again — this is expected
@@ -235,12 +237,13 @@ Every command runs through `uv run`, so you never need to activate the venv.
 
 | Command | What it does |
 |---|---|
-| `make setup` | `uv sync` — install all runtime + dev dependencies |
+| `make setup` | `uv sync` + `pre-commit install` — install dependencies and the git hook |
 | `make migrate` | Apply Alembic migrations (enable pgvector, create tables) |
 | `make ingest` | Scrape, chunk, embed, and store every URL in `list.json` |
 | `make cli` | Open the question REPL against the ingested data |
 | `make discord` | Run the Discord bot (`/ask` slash command) — see setup step 10 |
-| `make lint` | Run ruff (lint only, no changes) |
+| `make lint` | Run the full pre-commit suite on all files — identical to CI (may auto-fix) |
+| `make check` | Run ruff only, no file changes (fast lint check) |
 | `make format` | Run black (rewrites files in place) |
 | `make test` | Run the pytest suite (requires Docker running) |
 | `make cov` | Run the suite and write a browsable HTML coverage report to `htmlcov/index.html` |
@@ -250,18 +253,21 @@ Every command runs through `uv run`, so you never need to activate the venv.
 Run these before pushing to match what CI will check:
 
 ```bash
-# Lint (ruff)
+# Full lint suite — identical to the CI lint job (ruff, black, file hygiene)
 make lint
 
-# Format (black — rewrites files in place)
-make format
-
-# Full pre-commit pass — same as what CI runs in the lint job
-uv run pre-commit run --all-files
+# Fast ruff-only check, no file changes (inner dev loop)
+make check
 
 # Tests
 make test
 ```
+
+`make lint` runs the full pre-commit suite (`pre-commit run --all-files`) — the
+same command CI runs — so a green `make lint` locally means the CI lint job will
+pass. If a hook reformats a file, re-run `make lint` and commit the change. Use
+`make check` for a quick, non-mutating ruff pass while developing, and
+`make format` to apply black on its own.
 
 The test suite requires Docker to be running (it hits the `cs_assistant_test`
 Postgres database). Tests use savepoint-based rollback, so each test is
