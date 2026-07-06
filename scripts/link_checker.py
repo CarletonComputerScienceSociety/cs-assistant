@@ -4,36 +4,38 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+from src.config.logger import get_logger
 
+log = get_logger(__name__)
+
+
+# sends relevant info to webhook
 def send_discord(webhook_url: str, content: list[str]):
     payload = {"content": "\n".join(content)}
-    print(payload)
     req = urllib.request.Request(
         webhook_url,
         data=json.dumps(payload).encode("utf-8"),
         headers={"Content-Type": "application/json", "User-Agent": "link-checker/1.0"},
         method="POST",
     )
-    # lets try to use logs instead of print
     try:
         with urllib.request.urlopen(req) as resp:
-            print("Discord status:", resp.status)
-            print(resp.read().decode("utf-8", errors="ignore"))
+            log.info("Discord status:", status=resp.status)
+            log.info(resp.read().decode("utf-8", errors="ignore"))
     except urllib.error.HTTPError as e:
-        print("Discord HTTPError:", e.code)
         body = e.read().decode("utf-8", errors="ignore")
-        print("Discord response body:", body)
+        log.error("Discord HTTPError:", error=e.code, response_body=body)
         raise
 
 
-# can add a hardcoded webhook for the time being (when testing the file itself)
+# webhook for the discord channel
 webhook = os.environ["DISCORD_WEBHOOK_URL"]
-# webhook = ""
-# here goes the user id of the user we want to ping
+# user id of the user we want to ping
 user_id = os.environ["USER_ID"]
-# user_id = ""
 
-REPO_ROOT = Path(__file__).resolve().parents[1]  # works only if the script is in /scripts
+# works only if this script is in /scripts
+REPO_ROOT = Path(__file__).resolve().parents[1]
+# replace with any list
 URL_LIST_PATH = REPO_ROOT / "data" / "webpages" / "test_list.json"
 
 failed_urls = []
@@ -43,15 +45,13 @@ with open(URL_LIST_PATH) as f:
 
 for url in urls:
     url_status = urllib.request.urlopen(url).getcode()
-    print(f"url status: {url_status}")
-    # uncomment this so that ts actually works with 404 calls or any other calls which arent 200
-    # if url_status != 200:
-    #    failed_urls.append(f"FAILED URL: {url}")
-    # adds "FAILED URL:" before each url
-    failed_urls.append("FAILED URL: " + url)  # remove this after testing
-
+    if url_status != 200:
+        failed_urls.append(f"FAILED URL: {url}")
+    # uncomment this if you want to try the functionality with any other statuscode (or none)
+    # failed_urls.append("FAILED URL: " + url)
 
 payload = failed_urls
 payload.insert(0, f"<@{user_id}>, these links are returning a 404! Check these links.")
-if failed_urls:  # add 'not' later after testing and shit
+
+if failed_urls:
     send_discord(webhook, payload)
