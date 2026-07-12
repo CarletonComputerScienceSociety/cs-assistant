@@ -1,0 +1,34 @@
+# Keeps the build context small — the Dockerfile only COPYs pyproject.toml,
+# uv.lock, and src/, so everything below is unnecessary to send to the daemon.
+
+# Virtual environment (by far the largest item)
+.venv/
+
+# Git
+.git/
+.github/
+.gitignore
+
+# Secrets / local env (never bake into the image)
+.env
+
+# Python caches and bytecode
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Tests, test data, and evals — the bot reads ingested content from Postgres,
+# and ingestion runs from the host, so none of these are needed in the image.
+tests/
+data/
+evals/
+
+# Coverage reports
+.coverage
+htmlcov/
+
+# Local tickets (git-excluded) and editor/OS cruft
+.vscode/
+.DS_Store
