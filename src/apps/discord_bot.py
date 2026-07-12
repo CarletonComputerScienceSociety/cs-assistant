@@ -36,23 +36,22 @@ class CsAssistantBot(discord.Client):
 
         # triggering on explicit mention
         if bot_standard_mention in message.content or bot_nickname_mention in message.content:
-            question = await question_assembler(message)
+            question = await question_assembler(message, self.user.id)
 
             # if question is just empty/non-text
             if question == "":
                 return
 
-            async with message.channel.typing():
-                answer = await ask(question=question)
-
-            content = await render_answer_content(answer)
-
             try:
-                await message.reply(content)
+                async with message.channel.typing():
+                    answer = await ask(question=question)
             except Exception as e:
                 await message.reply("❌ I couldn't process this request, please try again later.")
                 log.error("discord_ask_failed", error=str(e))
                 return
+
+            content = render_answer_content(answer)
+            await message.reply(content)
 
 
 client = CsAssistantBot()
@@ -73,12 +72,12 @@ async def ask_command(interaction: discord.Interaction, question: str) -> None:
         log.error("discord_ask_failed", interaction_id=interaction.id, error=str(e))
         return
 
-    content = await render_answer_content(answer)
+    content = render_answer_content(answer)
     await interaction.followup.send(content)
     log.info("discord_ask_completed", interaction_id=interaction.id)
 
 
-async def question_assembler(message) -> str:
+async def question_assembler(message, bot_id: int) -> str:
     # if message is reply to a question
     referenced_text = ""
     if message.reference and message.reference.message_id:
@@ -87,7 +86,7 @@ async def question_assembler(message) -> str:
             referenced_text = referenced_message.content
         except discord.NotFound:
             log.info(
-                "No referenced text. Not Found.",
+                "referenced_message_not_found",
                 channel_id=message.channel.id,
                 channel_name=message.channel.name,
                 guild_id=message.guild.id,
@@ -95,7 +94,7 @@ async def question_assembler(message) -> str:
             )
         except discord.Forbidden:
             log.warning(
-                "No referenced text. Forbidden.",
+                "referenced_message_forbidden",
                 channel_id=message.channel.id,
                 channel_name=message.channel.name,
                 guild_id=message.guild.id,
@@ -104,7 +103,7 @@ async def question_assembler(message) -> str:
 
     return question_assembler_helper(
         content=message.content,
-        bot_id=message.guild.me.id,
+        bot_id=bot_id,
         referenced_text=referenced_text,
     )
 
@@ -124,7 +123,7 @@ def strip_bot_mention(content: str, bot_id: int) -> str:
     return mention_text.strip()
 
 
-async def render_answer_content(answer) -> str:
+def render_answer_content(answer) -> str:
     content = answer.text
     if answer.sources:
         content += "\n\n**Sources:**\n" + "\n".join(f"• {source.url}" for source in answer.sources)

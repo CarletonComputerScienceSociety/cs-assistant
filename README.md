@@ -175,7 +175,7 @@ You'll need your own throwaway Discord server and bot to develop against:
    DISCORD_GUILD_ID=your_server_id_here
    ```
 
-5. Start the bot:
+6. Start the bot:
 
    ```bash
    make discord
