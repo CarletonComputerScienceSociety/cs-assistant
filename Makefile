@@ -1,4 +1,4 @@
-.PHONY: setup cli migrate ingest test cov lint check format
+.PHONY: setup cli migrate ingest test cov lint check format discord discord-docker
 
 setup:
 	uv sync
@@ -31,3 +31,6 @@ check:
 
 format:
 	uv run black .
+
+discord-docker:
+	docker compose --profile bot up --build
