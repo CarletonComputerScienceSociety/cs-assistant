@@ -78,19 +78,21 @@ this reason — leave it there.
 make setup
 ```
 
-This runs `uv sync`, which installs all runtime and dev dependencies into a
-local virtual environment. You do not need to activate it; all `make` commands
-prefix their commands with `uv run`.
+This runs `uv sync` (installs all runtime and dev dependencies into a local
+virtual environment) and `pre-commit install` (sets up the git hook). You do
+not need to activate the venv; all `make` commands prefix their commands with
+`uv run`.
 
-### 5. Enable git pre-commit hooks
+### 5. Git pre-commit hooks
+
+`make setup` already installed the git pre-commit hook, so ruff, black, and the
+file-hygiene checks run automatically on every `git commit`. The hook
+configuration is committed (`.pre-commit-config.yaml`); the git hook itself is
+local per clone. To re-install it manually if needed:
 
 ```bash
 uv run pre-commit install
 ```
-
-This is a one-time step per clone. The hook configuration is committed
-(`.pre-commit-config.yaml`), but the actual git hook is local. After this,
-ruff and black run automatically on every `git commit`.
 
 If a hook auto-fixes files, the commit is aborted and the fixes are left
 unstaged. Just `git add` the changed files and commit again — this is expected
@@ -136,6 +138,15 @@ Scrapes, chunks, embeds, and stores all URLs listed in
 `data/webpages/list.json`. You'll see structured log output for each URL.
 Re-running is safe — unchanged content is skipped.
 
+> **Local dev tip:** embedding the full list with a local model can be slow. For
+> faster iteration, set `INGEST_URL_LIST` in your `.env` to the smaller curated
+> subset (1-2 pages per category, exercising every page type), then `make ingest`
+> as usual:
+>
+> ```bash
+> INGEST_URL_LIST=data/webpages/test_list.json
+> ```
+
 ### 9. Ask a question
 
 ```bash
@@ -162,18 +173,20 @@ You'll need your own throwaway Discord server and bot to develop against:
 1. In the [Discord Developer Portal](https://discord.com/developers/applications),
    create an application, then under **Bot** click **Reset Token** and copy the
    token. No privileged intents are required — `/ask` uses default intents.
-2. Under **OAuth2 → URL Generator**, select the `bot` and `applications.commands`
+2. Scroll down and check the permissions the bot needs: **Send Messages**,
+   **View Channel** and **Read Message History**.
+3. Under **OAuth2 → URL Generator**, select the `bot` and `applications.commands`
    scopes, open the generated URL, and invite the bot to a server you own.
-3. Enable **Settings → Advanced → Developer Mode**, then right-click your server
+4. Enable **Settings → Advanced → Developer Mode**, then right-click your server
    icon → **Copy Server ID**.
-4. Add both values to your `.env`:
+5. Add both values to your `.env`:
 
    ```
    DISCORD_BOT_TOKEN=your_token_here
    DISCORD_GUILD_ID=your_server_id_here
    ```
 
-5. Start the bot:
+6. Start the bot:
 
    ```bash
    make discord
@@ -226,32 +239,37 @@ Every command runs through `uv run`, so you never need to activate the venv.
 
 | Command | What it does |
 |---|---|
-| `make setup` | `uv sync` — install all runtime + dev dependencies |
+| `make setup` | `uv sync` + `pre-commit install` — install dependencies and the git hook |
 | `make migrate` | Apply Alembic migrations (enable pgvector, create tables) |
 | `make ingest` | Scrape, chunk, embed, and store every URL in `list.json` |
 | `make cli` | Open the question REPL against the ingested data |
 | `make discord` | Run the Discord bot (`/ask` slash command) — see setup step 10 |
-| `make lint` | Run ruff (lint only, no changes) |
+| `make lint` | Run the full pre-commit suite on all files — identical to CI (may auto-fix) |
+| `make check` | Run ruff only, no file changes (fast lint check) |
 | `make format` | Run black (rewrites files in place) |
 | `make test` | Run the pytest suite (requires Docker running) |
+| `make cov` | Run the suite and write a browsable HTML coverage report to `htmlcov/index.html` |
 
 ## Running checks locally
 
 Run these before pushing to match what CI will check:
 
 ```bash
-# Lint (ruff)
+# Full lint suite — identical to the CI lint job (ruff, black, file hygiene)
 make lint
 
-# Format (black — rewrites files in place)
-make format
-
-# Full pre-commit pass — same as what CI runs in the lint job
-uv run pre-commit run --all-files
+# Fast ruff-only check, no file changes (inner dev loop)
+make check
 
 # Tests
 make test
 ```
+
+`make lint` runs the full pre-commit suite (`pre-commit run --all-files`) — the
+same command CI runs — so a green `make lint` locally means the CI lint job will
+pass. If a hook reformats a file, re-run `make lint` and commit the change. Use
+`make check` for a quick, non-mutating ruff pass while developing, and
+`make format` to apply black on its own.
 
 The test suite requires Docker to be running (it hits the `cs_assistant_test`
 Postgres database). Tests use savepoint-based rollback, so each test is
@@ -331,6 +349,54 @@ Hosted production deployment is a future goal. Today everything runs on your
 machine.
 
 ---
+
+## Bot Deployment
+
+This section covers running the Discord bot in a container. The bot service lives behind a Docker Compose profile so a plain `docker compose up` (used by contributors who only need Postgres and Redis for tests) is unaffected.
+
+### Prerequisites
+
+1. **Run migrations and ingestion from the host first.** The bot container only reads data; it does not migrate or ingest.
+
+```bash
+ make migrate
+ make ingest
+```
+
+2. **Ollama must be running on the host** with both the chat model and the embedding model pulled. Ollama is intentionally not containerized — it holds the models and will use a GPU host in production.
+
+3. **`.env` must be populated** with at least `DISCORD_BOT_TOKEN` and `DISCORD_GUILD_ID`. The bot exits at startup without them. The token is supplied at runtime via `env_file` and is never baked into the image.
+
+### Build and run
+
+```bash
+# Build the image and start the bot (plus Postgres):
+docker compose --profile bot up --build
+
+# Run in the background:
+docker compose --profile bot up -d --build
+
+# Or use the Makefile shortcut:
+make discord-docker
+```
+
+A plain `docker compose up -d` starts only `postgres` and `redis` — the `bot` service is excluded automatically.
+
+### Networking
+
+A container does not share the host's `localhost`, so two values from `.env` are overridden in the `bot` service inside `docker-compose.yml`:
+
+| Setting | Host (`.env`) | Container override |
+|---|---|---|
+| `DATABASE_URL` | `…@localhost:5445/…` | `…@postgres:5432/cs_assistant` |
+| `OLLAMA_URL` | `http://localhost:11434` | `http://host.docker.internal:11434` |
+
+Everything else (`DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`, `OLLAMA_CHAT_MODEL`, `EMBEDDING_DIM`, `TOP_K`, etc.) passes through unchanged from `.env`.
+
+**Linux note:** `host.docker.internal` does not resolve automatically on Linux. The `bot` service includes `extra_hosts: ["host.docker.internal:host-gateway"]` to handle this. This is harmless on macOS/Windows and is included unconditionally.
+
+
+
 
 ## Notes for contributors
 
