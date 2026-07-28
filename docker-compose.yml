@@ -1,7 +1,6 @@
 services:
   bot:
     build: .
-    command: uv run python -m src.apps.discord_bot
     profiles: ["bot"]
     depends_on:
       - postgres
