@@ -1,3 +1,5 @@
+import re
+
 from src.completions.prompts import build_messages
 from src.config.logger import get_logger
 from src.domain.types import Answer, RetrievedChunk, Source
@@ -12,6 +14,13 @@ def _format_context(chunks: list[RetrievedChunk]) -> str:
     for rc in chunks:
         parts.append(f"[Source: {rc.chunk.source_url}]\n{rc.chunk.content}")
     return "---\n" + "\n\n".join(parts) + "\n---"
+
+
+def _strip_trailing_sources_block(text: str) -> str:
+    matches = list(re.finditer(r"^Sources:", text, flags=re.MULTILINE))
+    if not matches:
+        return text
+    return text[: matches[-1].start()].rstrip()
 
 
 def _extract_sources(chunks: list[RetrievedChunk]) -> list[Source]:
@@ -48,7 +57,7 @@ async def ask(question: str) -> Answer:
 
     log.info("ask_complete", n_sources=len(chunks))
     return Answer(
-        text=response_text,
+        text=_strip_trailing_sources_block(response_text),
         sources=_extract_sources(chunks),
         confidence="high",
     )
