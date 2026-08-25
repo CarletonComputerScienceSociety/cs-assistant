@@ -1,0 +1,2 @@
+# Recursively ignore .html files under /tests/ingestion/fixtures from final repo stats
+/tests/ingestion/fixtures/**/*.html linguist-vendored
